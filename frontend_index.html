@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Waste Classifier</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f7f5;
+            color: #111827;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* =========================
+           HEADER
+        ========================= */
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 42px;
+            color: #111827;
+        }
+
+        .header p {
+            margin-top: 10px;
+            color: #64748b;
+            font-size: 18px;
+        }
+
+        /* =========================
+           MAIN CARD
+        ========================= */
+
+        .card {
+            width: 100%;
+            background: white;
+            border-radius: 22px;
+            padding: 30px;
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.08);
+        }
+
+        /* =========================
+           UPLOAD AREA
+        ========================= */
+
+        .upload-area {
+            width: 100%;
+            min-height: 230px;
+
+            border: 2px dashed #94a3b8;
+            border-radius: 18px;
+
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+
+            text-align: center;
+
+            padding: 40px 20px;
+
+            cursor: pointer;
+
+            transition:
+                background 0.2s ease,
+                border-color 0.2s ease,
+                transform 0.2s ease;
+        }
+
+        .upload-area:hover {
+            background: #f0fdf4;
+            border-color: #16a34a;
+            transform: translateY(-2px);
+        }
+
+        .upload-icon {
+            font-size: 55px;
+            margin-bottom: 15px;
+        }
+
+        .upload-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1f2937;
+        }
+
+        .upload-subtitle {
+            margin-top: 8px;
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        /* =========================
+           PREVIEW
+        ========================= */
+
+        .preview {
+            width: 100%;
+            margin-top: 25px;
+            display: none;
+            text-align: center;
+        }
+
+        .preview img {
+            display: block;
+            width: auto;
+            max-width: 100%;
+            max-height: 400px;
+
+            margin: 0 auto;
+
+            border-radius: 16px;
+            object-fit: contain;
+        }
+
+        /* =========================
+           BUTTON
+        ========================= */
+
+        .predict-button {
+            width: 100%;
+
+            margin-top: 25px;
+            padding: 15px;
+
+            border: none;
+            border-radius: 12px;
+
+            background: #16a34a;
+            color: white;
+
+            font-size: 16px;
+            font-weight: bold;
+
+            cursor: pointer;
+
+            transition: background 0.2s ease;
+        }
+
+        .predict-button:hover:not(:disabled) {
+            background: #15803d;
+        }
+
+        .predict-button:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+        }
+
+        /* =========================
+           LOADING
+        ========================= */
+
+        .loading {
+            display: none;
+
+            text-align: center;
+
+            margin-top: 20px;
+
+            color: #64748b;
+            font-size: 15px;
+        }
+
+        /* =========================
+           ERROR
+        ========================= */
+
+        .error {
+            display: none;
+
+            margin-top: 20px;
+            padding: 15px;
+
+            border-radius: 10px;
+
+            background: #fee2e2;
+            color: #991b1b;
+
+            font-size: 14px;
+        }
+
+        /* =========================
+           RESULT
+        ========================= */
+
+        .result {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .result-main {
+            padding: 30px;
+
+            text-align: center;
+
+            background: #f0fdf4;
+
+            border-radius: 18px;
+        }
+
+        .result-icon {
+            font-size: 55px;
+        }
+
+        .result-label {
+            margin-top: 10px;
+
+            color: #64748b;
+            font-size: 15px;
+        }
+
+        .predicted-class {
+            margin: 8px 0;
+
+            color: #166534;
+
+            font-size: 36px;
+            font-weight: bold;
+
+            text-transform: capitalize;
+        }
+
+        .confidence {
+            color: #374151;
+            font-size: 17px;
+        }
+
+        /* =========================
+           PROBABILITY
+        ========================= */
+
+        .probabilities {
+            margin-top: 30px;
+        }
+
+        .probabilities h3 {
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+
+        .probability-item {
+            margin-bottom: 18px;
+        }
+
+        .probability-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            margin-bottom: 7px;
+
+            font-size: 15px;
+            font-weight: bold;
+        }
+
+        .bar-container {
+            width: 100%;
+            height: 12px;
+
+            background: #e5e7eb;
+
+            border-radius: 20px;
+
+            overflow: hidden;
+        }
+
+        .bar {
+            height: 100%;
+
+            background: #16a34a;
+
+            border-radius: 20px;
+
+            transition: width 0.6s ease;
+        }
+
+        /* =========================
+           FOOTER
+        ========================= */
+
+        .footer {
+            text-align: center;
+
+            margin-top: 25px;
+
+            color: #94a3b8;
+
+            font-size: 13px;
+        }
+
+        /* =========================
+           RESPONSIVE
+        ========================= */
+
+        @media (max-width: 600px) {
+
+            body {
+                padding: 25px 15px;
+            }
+
+            .header h1 {
+                font-size: 32px;
+            }
+
+            .header p {
+                font-size: 15px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .upload-area {
+                min-height: 200px;
+            }
+
+            .predicted-class {
+                font-size: 30px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <!-- HEADER -->
+        <div class="header">
+
+            <h1>
+                ♻️ Waste Classifier
+            </h1>
+
+            <p>
+                Klasifikasi sampah menggunakan ResNet18 V2
+            </p>
+
+        </div>
+
+
+        <!-- CARD -->
+        <div class="card">
+
+            <!-- UPLOAD -->
+            <label
+                for="fileInput"
+                class="upload-area"
+            >
+
+                <div class="upload-icon">
+                    📷
+                </div>
+
+                <div class="upload-title">
+                    Klik untuk memilih gambar
+                </div>
+
+                <div class="upload-subtitle">
+                    JPG, JPEG, atau PNG
+                </div>
+
+            </label>
+
+            <input
+                type="file"
+                id="fileInput"
+                accept="image/jpeg,image/png,image/jpg"
+            >
+
+
+            <!-- PREVIEW -->
+            <div
+                id="preview"
+                class="preview"
+            ></div>
+
+
+            <!-- PREDICT BUTTON -->
+            <button
+                id="predictButton"
+                class="predict-button"
+                disabled
+            >
+                🔍 Predict
+            </button>
+
+
+            <!-- LOADING -->
+            <div
+                id="loading"
+                class="loading"
+            >
+                ⏳ Sedang menganalisis gambar...
+            </div>
+
+
+            <!-- ERROR -->
+            <div
+                id="error"
+                class="error"
+            ></div>
+
+
+            <!-- RESULT -->
+            <div
+                id="result"
+                class="result"
+            >
+
+                <!-- MAIN RESULT -->
+                <div class="result-main">
+
+                    <div class="result-icon">
+                        ♻️
+                    </div>
+
+                    <div class="result-label">
+                        Jenis Sampah
+                    </div>
+
+                    <div
+                        id="predictedClass"
+                        class="predicted-class"
+                    >
+                        -
+                    </div>
+
+                    <div class="confidence">
+                        Confidence:
+                        <strong id="confidence">
+                            -
+                        </strong>
+                    </div>
+
+                </div>
+
+
+                <!-- PROBABILITIES -->
+                <div class="probabilities">
+
+                    <h3>
+                        Detail Probability
+                    </h3>
+
+                    <div
+                        id="probabilityList"
+                    ></div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- FOOTER -->
+        <div class="footer">
+            Waste Classification • ResNet18 V2
+        </div>
+
+    </div>
+
+
+    <script>
+
+        // ============================================
+        // CONFIG
+        // ============================================
+
+        const API_URL =
+            "http://127.0.0.1:8000";
+
+
+        // ============================================
+        // ELEMENT
+        // ============================================
+
+        const fileInput =
+            document.getElementById(
+                "fileInput"
+            );
+
+        const preview =
+            document.getElementById(
+                "preview"
+            );
+
+        const predictButton =
+            document.getElementById(
+                "predictButton"
+            );
+
+        const loading =
+            document.getElementById(
+                "loading"
+            );
+
+        const error =
+            document.getElementById(
+                "error"
+            );
+
+        const result =
+            document.getElementById(
+                "result"
+            );
+
+        const predictedClass =
+            document.getElementById(
+                "predictedClass"
+            );
+
+        const confidence =
+            document.getElementById(
+                "confidence"
+            );
+
+        const probabilityList =
+            document.getElementById(
+                "probabilityList"
+            );
+
+
+        // ============================================
+        // FILE SELECT
+        // ============================================
+
+        fileInput.addEventListener(
+            "change",
+            function () {
+
+                const file =
+                    this.files[0];
+
+
+                if (!file) {
+                    return;
+                }
+
+
+                // Check image
+
+                if (!file.type.startsWith("image/")) {
+
+                    showError(
+                        "File harus berupa gambar."
+                    );
+
+                    return;
+                }
+
+
+                // Create preview
+
+                const imageURL =
+                    URL.createObjectURL(
+                        file
+                    );
+
+
+                preview.innerHTML = "";
+
+                const image =
+                    document.createElement(
+                        "img"
+                    );
+
+                image.src =
+                    imageURL;
+
+                image.alt =
+                    "Preview gambar";
+
+
+                preview.appendChild(
+                    image
+                );
+
+
+                preview.style.display =
+                    "block";
+
+
+                // Enable predict
+
+                predictButton.disabled =
+                    false;
+
+
+                // Hide old result
+
+                result.style.display =
+                    "none";
+
+                error.style.display =
+                    "none";
+
+            }
+        );
+
+
+        // ============================================
+        // PREDICT
+        // ============================================
+
+        predictButton.addEventListener(
+            "click",
+            async function () {
+
+                const file =
+                    fileInput.files[0];
+
+
+                if (!file) {
+                    return;
+                }
+
+
+                // FormData
+
+                const formData =
+                    new FormData();
+
+                formData.append(
+                    "file",
+                    file
+                );
+
+
+                // UI state
+
+                predictButton.disabled =
+                    true;
+
+                loading.style.display =
+                    "block";
+
+                error.style.display =
+                    "none";
+
+                result.style.display =
+                    "none";
+
+
+                try {
+
+                    // ====================================
+                    // REQUEST
+                    // ====================================
+
+                    const response =
+                        await fetch(
+                            `${API_URL}/predict`,
+                            {
+                                method: "POST",
+                                body: formData
+                            }
+                        );
+
+
+                    // ====================================
+                    // RESPONSE CHECK
+                    // ====================================
+
+                    if (!response.ok) {
+
+                        let message =
+                            "Prediction gagal.";
+
+                        try {
+
+                            const errorData =
+                                await response.json();
+
+                            message =
+                                errorData.detail ||
+                                message;
+
+                        } catch (e) {
+                            // ignore
+                        }
+
+                        throw new Error(
+                            message
+                        );
+                    }
+
+
+                    // ====================================
+                    // JSON
+                    // ====================================
+
+                    const data =
+                        await response.json();
+
+
+                    console.log(
+                        "API Response:",
+                        data
+                    );
+
+
+                    // ====================================
+                    // MAIN RESULT
+                    // ====================================
+
+                    predictedClass.textContent =
+                        capitalize(
+                            data.predicted_class
+                        );
+
+
+                    confidence.textContent =
+                        `${data.confidence}%`;
+
+
+                    // ====================================
+                    // PROBABILITIES
+                    // ====================================
+
+                    probabilityList.innerHTML =
+                        "";
+
+
+                    const sortedProbabilities =
+                        Object.entries(
+                            data.probabilities
+                        ).sort(
+                            (a, b) =>
+                                b[1] - a[1]
+                        );
+
+
+                    sortedProbabilities.forEach(
+                        function (
+                            [className, probability]
+                        ) {
+
+                            const item =
+                                document.createElement(
+                                    "div"
+                                );
+
+                            item.className =
+                                "probability-item";
+
+
+                            item.innerHTML = `
+
+                                <div
+                                    class="probability-header"
+                                >
+
+                                    <span>
+                                        ${capitalize(
+                                            className
+                                        )}
+                                    </span>
+
+                                    <span>
+                                        ${probability}%
+                                    </span>
+
+                                </div>
+
+                                <div
+                                    class="bar-container"
+                                >
+
+                                    <div
+                                        class="bar"
+                                        style="
+                                            width:
+                                            ${probability}%;
+                                        "
+                                    ></div>
+
+                                </div>
+
+                            `;
+
+
+                            probabilityList.appendChild(
+                                item
+                            );
+
+                        }
+                    );
+
+
+                    // Show result
+
+                    result.style.display =
+                        "block";
+
+                }
+
+
+                catch (err) {
+
+                    console.error(
+                        "Prediction Error:",
+                        err
+                    );
+
+
+                    showError(
+                        err.message ||
+                        "Terjadi kesalahan."
+                    );
+
+                }
+
+
+                finally {
+
+                    loading.style.display =
+                        "none";
+
+                    predictButton.disabled =
+                        false;
+
+                }
+
+            }
+        );
+
+
+        // ============================================
+        // HELPER
+        // ============================================
+
+        function capitalize(
+            text
+        ) {
+
+            return text
+                .charAt(0)
+                .toUpperCase()
+                + text.slice(1);
+
+        }
+
+
+        function showError(
+            message
+        ) {
+
+            error.textContent =
+                message;
+
+            error.style.display =
+                "block";
+
+        }
+
+    </script>
+
+</body>
+</html>

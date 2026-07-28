@@ -1,0 +1,49 @@
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python environment
+*.egg-info/
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Model files
+*.pth
+
+# Dataset
+dataset/
+
+# Cache
+.cache/
+
+# Environment variables
+.env
+.env.*
+
+# Streamlit
+.streamlit/
+
+# Test cache
+.pytest_cache/
